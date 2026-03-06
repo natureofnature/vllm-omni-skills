@@ -110,6 +110,27 @@ When a PR has multiple prefixes (e.g., `[Perf][Distributed]`):
 | `[Feature]` + `[API]` | `vllm-omni-api` | — (API skill usually sufficient) |
 | `[Distributed]` + `[Hardware]` | `vllm-omni-distributed` | `vllm-omni-hardware` (check backend compat) |
 
+### Hardware Platform Detection
+
+**Scan the diff for hardware-specific patterns. If found, invoke `vllm-omni-hardware` skill.**
+
+```bash
+gh pr diff <pr_number> --repo vllm-project/vllm-omni | grep -E 'is_npu|is_cuda|torch\.cuda|torch_npu'
+```
+
+| Pattern | Platform | Review Focus |
+|---------|----------|--------------|
+| `is_npu` | NPU (Ascend) | NPU-specific ops, memory, compatibility |
+| `is_cuda` | CUDA | Device checks, conditional paths |
+| `torch.cuda` | CUDA | Device placement, memory management |
+| `torch_npu` | NPU (Ascend) | NPU bindings, compatibility |
+
+**When detected, check for:**
+- Missing NPU fallback paths when CUDA is primary
+- Hardcoded device assumptions (`cuda:0` vs device-agnostic)
+- Platform-specific ops without guards
+- Memory management differences between platforms
+
 ### Step 3: Run Red Flag Checks
 
 **Required for ALL PRs:**
