@@ -79,7 +79,7 @@ gh issue view <issue_number> --repo vllm-project/vllm-omni --json title,body,lab
 gh pr view <pr_number> --repo vllm-project/vllm-omni --json files --jq '.files[].path'
 
 # For each significant file, find other open/recent PRs
-gh search prs --repo vllm-project/vllm-omni "<file_path>" --state merged --limit 5 --json number,title,author,mergedAt
+gh search prs --repo vllm-project/vllm-omni "<file_path>" --merged --limit 5 --json number,title,author,closedAt
 ```
 
 **What linked context provides:**
