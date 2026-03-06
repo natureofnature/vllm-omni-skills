@@ -26,6 +26,33 @@ Review pull requests for [vLLM-Omni](https://github.com/vllm-project/vllm-omni) 
 
 ## Review Workflow
 
+### Step 0: Verify CI Gate (REQUIRED FIRST)
+
+**Check these BEFORE reviewing code. If any fail, post a gate-failure comment and STOP.**
+
+```bash
+gh pr view <pr_number> --repo vllm-project/vllm-omni --json mergeable,statusCheckRollup --jq '{mergeable, checks: [.statusCheckRollup[] | {name, conclusion}]}'
+```
+
+| Check | Passing State | Action if Failed |
+|-------|---------------|------------------|
+| DCO | `SUCCESS` | Comment "DCO check failed. Please sign your commits with `git commit -s`." |
+| pre-commit | `SUCCESS` | Comment "Pre-commit checks failed. Run `pre-commit run --all-files` and fix issues." |
+| mergeable | `MERGEABLE` | Comment "Merge conflicts detected. Please rebase onto main and resolve conflicts." |
+
+**Gate failure comment template:**
+```
+🚫 **Review Blocked: CI Gate Failed**
+
+- [ ] DCO: <status>
+- [ ] Pre-commit: <status>
+- [ ] Merge conflicts: <status>
+
+Please resolve these issues before review proceeds.
+```
+
+**Only proceed to Step 1 when all gates pass.**
+
 ### Step 1: Fetch PR Data
 
 ```bash
