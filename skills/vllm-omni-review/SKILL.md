@@ -56,9 +56,49 @@ Please resolve these issues before review proceeds.
 ### Step 1: Fetch PR Data
 
 ```bash
-gh pr view <pr_number> --repo vllm-project/vllm-omni --json title,body,author,state
+gh pr view <pr_number> --repo vllm-project/vllm-omni --json title,body,author,state,files,closingIssuesReferences
 gh pr diff <pr_number> --repo vllm-project/vllm-omni
 ```
+
+### Step 1.5: Fetch Linked Context (Issues & Related PRs)
+
+**Fetch linked issues for context:**
+
+```bash
+# Get closing issues referenced in PR body (Fixes #123, Closes #456, etc.)
+gh pr view <pr_number> --repo vllm-project/vllm-omni --json closingIssuesReferences --jq '.closingIssuesReferences[] | {number, title, body}'
+
+# For each linked issue, get full details
+gh issue view <issue_number> --repo vllm-project/vllm-omni --json title,body,labels,state,comments
+```
+
+**Fetch related PRs touching the same files:**
+
+```bash
+# Get list of changed files from PR
+gh pr view <pr_number> --repo vllm-project/vllm-omni --json files --jq '.files[].path'
+
+# For each significant file, find other open/recent PRs
+gh search prs --repo vllm-project/vllm-omni "<file_path>" --state merged --limit 5 --json number,title,author,mergedAt
+```
+
+**What linked context provides:**
+
+| Context Type | Value for Review |
+|--------------|------------------|
+| **Linked Issues** | Original bug description, acceptance criteria, design decisions |
+| **Related Merged PRs** | Patterns to follow, prior solutions, area-specific conventions |
+| **Issue Labels** | Priority (P0/P1), area owners, breaking change flags |
+| **Issue Comments** | Prior discussions, rejected approaches, constraints |
+
+**When linked context is critical:**
+
+- `[Bugfix]` PRs → **Always fetch linked issue** for bug reproduction steps
+- `[Feature]` PRs → **Always fetch linked issue** for acceptance criteria
+- Complex multi-file changes → **Check related PRs** for area conventions
+- Changes to shared infrastructure → **Check related PRs** for coordination needs
+
+**Limits:** 2-3 linked issues max, 5 related PRs per file max
 
 ### Step 2: Identify PR Type & Trigger Skill
 
@@ -233,6 +273,7 @@ The implementation looks good. Consider adding tests.
 - New imports with performance/compatibility implications
 - 3-line diff context isn't enough
 - Code changes might require config updates
+- Need to understand prior decisions or constraints
 
 **Tools:**
 ```bash
@@ -244,9 +285,14 @@ gh search code --repo vllm-project/vllm-omni "class <SymbolName>"
 
 # Check related configs
 gh search code --repo vllm-project/vllm-omni "<config_key>" --extension yaml
+
+# Find discussions on similar topics
+gh search discussions --repo vllm-project/vllm-omni "<topic>"
 ```
 
 **Limits:** 3-5 context fetches per review, 20-50 lines each
+
+> **Note:** For linked issues and related PRs, see Step 1.5 which handles this systematically.
 
 ## Known Dependencies
 
