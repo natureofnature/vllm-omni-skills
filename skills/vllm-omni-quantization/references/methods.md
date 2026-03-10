@@ -1,4 +1,6 @@
-# Quantization Methods Reference
+# AR Quantization Methods Reference
+
+This file covers autoregressive and general `vllm` quantization paths used by `vllm-omni`. For diffusion `fp8` and `gguf`, see `diffusion.md`.
 
 ## AWQ (Activation-Aware Weight Quantization)
 

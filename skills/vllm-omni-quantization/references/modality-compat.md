@@ -2,19 +2,22 @@
 
 ## Summary
 
-Quantization in vLLM-Omni applies to **autoregressive (AR) language model components** only. Diffusion transformer (DiT) components used in image/video generation are not quantized and remain in BF16/FP16.
+Quantization in `vllm-omni` is split:
+
+- AR and omni-model quantization follow upstream `vllm`
+- diffusion quantization exists for selected DiT models through `fp8` and `gguf`
 
 ## Compatibility Matrix
 
-| Model Type | Weight Quantization | KV Cache FP8 | Notes |
-|------------|--------------------|----|-------|
-| **Omni models** (Qwen-Omni) | Yes (AR backbone) | Yes | Quantize the thinker/talker; DiT decoder unaffected |
-| **AR-only text models** | Yes | Yes | Full support |
-| **Multi-stage AR+DiT** (Qwen-Image, BAGEL) | Partial (AR stage only) | AR stage only | DiT stage stays in BF16 |
-| **DiT-only image models** (FLUX, SD3, Z-Image) | No | N/A | No quantization support |
-| **Video models** (Wan2.2) | No | N/A | DiT architecture, no quantization |
-| **TTS models** (Qwen3-TTS) | Yes (AR decoder) | Yes | Quality may degrade for voice cloning |
-| **Audio models** (Stable-Audio) | No | N/A | Diffusion architecture |
+| Model Type | AR Weight Quantization | Diffusion Quantization | KV Cache FP8 | Notes |
+|------------|------------------------|------------------------|--------------|-------|
+| **Omni models** (Qwen-Omni) | Yes | N/A | Yes | Quantize the AR backbone |
+| **AR-only text models** | Yes | N/A | Yes | Full upstream support |
+| **Multi-stage AR+DiT** (Qwen-Image, BAGEL) | Partial | Qwen-Image FP8 only | AR stage only | Qwen-Image DiT supports diffusion FP8; other hybrids vary by model |
+| **DiT-only image models** (Z-Image, FLUX.2-klein, SD3) | No | Z-Image FP8 and GGUF; FLUX.2-klein GGUF; SD3 none | N/A | Check model-specific diffusion support before assuming coverage |
+| **Video models** (Wan2.2) | No | No | N/A | Use cache and parallelism instead |
+| **TTS models** (Qwen3-TTS) | Yes | N/A | Yes | Quality may degrade for voice cloning |
+| **Audio models** (Stable-Audio) | No | No | N/A | Diffusion architecture, no quantization path documented here |
 
 ## Omni Models (Qwen2.5-Omni, Qwen3-Omni)
 
@@ -29,22 +32,30 @@ vllm serve Qwen/Qwen2.5-Omni-7B-AWQ --omni --quantization awq
 - Audio output quality: slight degradation, especially for voice characteristics
 - Multi-modal understanding: minimal degradation
 
-## Image Generation Models (FLUX, SD3, Qwen-Image, BAGEL)
+## Image Generation Models (FLUX, SD3, Qwen-Image, BAGEL, Z-Image)
 
-Diffusion components do not support weight quantization. Use performance techniques instead:
-- **TeaCache**: 1.5-2.0x speedup with no quality loss
-- **CPU offloading**: fit larger models with `--cpu-offload-gb`
-- **Dtype**: ensure BF16 is used (default on Ampere+)
+Diffusion quantization is now model-specific rather than globally unsupported.
 
-For Qwen-Image and BAGEL (AR+DiT pipelines), quantizing the AR stage still saves memory:
+- `Qwen-Image`, `Qwen-Image-2512`: diffusion `fp8` supported; start with `ignored_layers=["img_mlp"]`
+- `Tongyi-MAI/Z-Image-Turbo`: diffusion `fp8` supported; all-layer quantization is the default starting point
+- `FLUX.2-klein`: diffusion `gguf` supported through model-specific adapter logic
+- `SD3`, `Bagel`, most video diffusion models: no diffusion quantization path documented here
+
+For hybrids with an AR stage, AR quantization can still save memory even if the DiT stage is not quantized:
 
 ```bash
 vllm serve Qwen/Qwen-Image-AWQ --omni --quantization awq
 ```
 
+For unsupported diffusion models, use:
+
+- **TeaCache** or **Cache-DiT** for speed
+- **CPU offloading** for memory
+- **BF16/FP16** dtype choices
+
 ## Video Models (Wan2.2)
 
-No weight quantization support. Use:
+No documented diffusion weight quantization support. Use:
 - **TeaCache** or **Cache-DiT** for speed
 - **CPU offloading** for memory
 - **Tensor parallelism** for both
@@ -64,9 +75,10 @@ vllm serve Qwen/Qwen3-TTS-12Hz-1.7B-AWQ --omni --quantization awq
 
 | Primary Use Case | Recommended Approach |
 |-----------------|---------------------|
-| Text/omni (Qwen-Omni) | AWQ 4-bit, saves ~75% VRAM |
-| Image generation (FLUX, SD3) | CPU offloading + TeaCache |
-| Image generation (Qwen-Image) | AWQ on AR stage |
-| Video generation (Wan2.2) | CPU offloading + Cache-DiT |
+| Text or omni AR backbone | AWQ 4-bit or GPTQ 4-bit |
+| Qwen-Image diffusion | diffusion `fp8`, often with `ignored_layers=["img_mlp"]` |
+| Z-Image diffusion | diffusion `fp8` |
+| FLUX.2-klein diffusion | diffusion `gguf` |
+| Unsupported diffusion models | CPU offloading + cache acceleration |
 | TTS (Qwen3-TTS) | AWQ 8-bit for quality |
 | Audio understanding (MiMo-Audio) | AWQ 4-bit |
