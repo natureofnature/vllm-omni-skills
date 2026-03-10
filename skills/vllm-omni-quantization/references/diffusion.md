@@ -33,7 +33,7 @@ Prefer dynamic activation scaling unless static calibration is explicitly requir
 ### GGUF
 
 - Native quantized transformer-weight loading
-- Require `quantization_config.gguf_model`
+- Requires `quantization_config.gguf_model`
 - Resolve GGUF as a local file, `repo/file.gguf`, or `repo:quant_type`
 - If the GGUF repo lacks `model_index.json`, use the base HF repo for config and use GGUF only for transformer weights
 
