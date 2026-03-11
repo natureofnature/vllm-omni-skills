@@ -1,6 +1,6 @@
 ---
 name: vllm-omni-audio-tts
-description: Generate audio and speech with vLLM-Omni using Qwen3-TTS, CosyVoice3, MiMo-Audio, and Stable-Audio models. Use when synthesizing speech from text, generating audio effects or music, configuring TTS parameters, cloning voices, adding new TTS models, or working with text-to-speech models.
+description: Generate audio and speech with vLLM-Omni using Qwen3-TTS, Fish Speech S2 Pro, CosyVoice3, MiMo-Audio, and Stable-Audio models. Use when synthesizing speech from text, generating audio effects or music, configuring TTS parameters, cloning voices, adding new TTS models, or working with text-to-speech models.
 ---
 
 # vLLM-Omni Audio & TTS
@@ -18,6 +18,7 @@ vLLM-Omni supports text-to-speech (TTS), text-to-audio (sound effects, music), a
 | Qwen3-TTS 1.7B Base | `Qwen/Qwen3-TTS-12Hz-1.7B-Base` | Basic TTS | 8 GB |
 | Qwen3-TTS 0.6B CustomVoice | `Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice` | TTS + voice cloning | 4 GB |
 | Qwen3-TTS 0.6B Base | `Qwen/Qwen3-TTS-12Hz-0.6B-Base` | Basic TTS | 4 GB |
+| Fish Speech S2 Pro | `fishaudio/s2-pro` | TTS + voice cloning (dual-AR + DAC) | 16 GB |
 | CosyVoice3 0.5B | `FunAudioLLM/Fun-CosyVoice3-0.5B-2512` | TTS (AR + flow matching) | 4 GB |
 | MiMo-Audio-7B | `XiaomiMiMo/MiMo-Audio-7B-Instruct` | Audio understanding + TTS | 24 GB |
 | Stable-Audio-Open | `stabilityai/stable-audio-open-1.0` | Text-to-audio (music/effects) | 8 GB |
@@ -27,6 +28,7 @@ vLLM-Omni supports text-to-speech (TTS), text-to-audio (sound effects, music), a
 Both Qwen3-TTS and CosyVoice3 use a two-stage autoregressive pipeline. See the reference docs for architecture details, key files, and model variants:
 
 - [Qwen3-TTS architecture and variants](references/qwen-tts.md)
+- [Fish Speech S2 Pro architecture and setup](references/fish-speech.md)
 - [CosyVoice3 architecture and setup](references/cosyvoice3.md)
 
 ## Quick Start: Text-to-Speech
@@ -130,6 +132,8 @@ Default stage config uses async_chunk streaming (`qwen3_tts.yaml`). Key knobs:
 
 For batch mode (no streaming), use `qwen3_tts_batch.yaml`.
 
+Fish Speech uses `fish_speech_s2_pro.yaml` with similar knobs. Its DAC codec outputs at 44.1 kHz (vs Qwen3-TTS's 24 kHz).
+
 Note: CosyVoice3 does not support async_chunk streaming yet - use `cosyvoice3.yaml` (batch mode only).
 
 ## Streaming Audio
@@ -157,5 +161,6 @@ For a step-by-step guide on integrating a new TTS model into vLLM-Omni, see the 
 ## References
 
 - For Qwen3-TTS details and voice options, see [references/qwen-tts.md](references/qwen-tts.md)
+- For Fish Speech S2 Pro details, see [references/fish-speech.md](references/fish-speech.md)
 - For CosyVoice3 details, see [references/cosyvoice3.md](references/cosyvoice3.md)
 - For MiMo-Audio capabilities, see [references/mimo-audio.md](references/mimo-audio.md)
