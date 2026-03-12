@@ -1,6 +1,6 @@
 # Review Routing
 
-Use this file when the main review skill needs help deciding which domain skill, secondary skill, or specialized reviewer to involve.
+Use this file when the main review skill needs help deciding which domain skill, secondary skill, or optional specialized reviewer to involve.
 
 ## Prefix Routing
 
@@ -54,15 +54,15 @@ Review concerns:
 
 ## Delegation Triggers
 
-Use specialized reviewers only when the trigger is real and the PR is large enough to justify extra context.
+Treat specialized reviewers as optional integrations. If the runtime has no `Agent(...)` or subagent tool, do the same checks manually and do not block on delegation.
 
-| Trigger | Reviewer | Focus |
-|---------|----------|-------|
-| new or changed `try/except` blocks | `pr-review-toolkit:silent-failure-hunter` | swallowed exceptions, bad fallbacks, silent empties |
-| new `@dataclass` or `TypedDict` | `pr-review-toolkit:type-design-analyzer` | invariants, validation, unsafe defaults |
-| test files changed | `pr-review-toolkit:pr-test-analyzer` | coverage gaps, unrealistic mocks, missing edges |
-| `vllm_omni/entrypoints/` changes | `code-reviewer` | input validation, security, abuse resistance |
-| config or validation code changes | `code-reviewer` | completeness, edge cases, compatibility |
+| Trigger | Optional reviewer if available | Manual review focus |
+|---------|--------------------------------|---------------------|
+| new or changed `try/except` blocks | `pr-review-toolkit:silent-failure-hunter` | swallowed exceptions, empty fallbacks, missing logs, bad retry behavior |
+| new `@dataclass` or `TypedDict` | `pr-review-toolkit:type-design-analyzer` | invariants, missing validation, unsafe defaults, optional-vs-required fields |
+| test files changed | `pr-review-toolkit:pr-test-analyzer` | coverage gaps, unrealistic mocks, missing regression cases, weak assertions |
+| `vllm_omni/entrypoints/` changes | `code-reviewer` | input validation, abuse resistance, unsafe parameter passthrough, bad error surfaces |
+| config or validation code changes | `code-reviewer` | validation completeness, backward compatibility, edge cases, default handling |
 
 Delegation limits:
 
@@ -70,6 +70,12 @@ Delegation limits:
 - Skip delegation for docs-only PRs
 - Skip delegation for small PRs unless the risk is unusually high
 - Delegated findings still count against the total comment budget
+
+If no delegation tool exists:
+
+- Apply the manual focus column directly during review
+- Keep the same 5-comment budget
+- Do not mention missing reviewer tooling in the PR unless the user explicitly asks
 
 ## Context Expansion Rules
 

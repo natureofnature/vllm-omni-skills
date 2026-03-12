@@ -1,6 +1,6 @@
 ---
 name: vllm-omni-tts-integration
-description: Step-by-step workflow for integrating a new TTS model into vLLM-Omni. Covers the full pipeline from HuggingFace reference model to production-ready serving with streaming and CUDA graph acceleration.
+description: Integrate a new TTS model into vLLM-Omni from HuggingFace reference implementation through production-ready serving with streaming and CUDA graph acceleration. Use when adding a new TTS model, wiring stage separation, enabling online speech serving, or debugging TTS integration behavior.
 ---
 
 # TTS Model Integration Workflow
